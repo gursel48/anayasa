@@ -1,0 +1,2637 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Anayasa 150 Soru Deneme Sınavı</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f4f8;
+      margin: 0;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 80px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 860px;
+    }
+
+    .menu-container, .quiz-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 100%;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .menu-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
+      cursor: pointer;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+    }
+
+    .menu-btn.locked {
+      background: linear-gradient(135deg, #6c757d, #495057);
+      cursor: not-allowed;
+      order: 999;
+      opacity: 0.85;
+    }
+
+    .wrong-menu-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
+      cursor: pointer;
+      background: linear-gradient(135deg, #dc3545, #a71d2a);
+      color: white;
+      order: 9999;
+      animation: wrongBlink 10s infinite;
+    }
+
+    @keyframes wrongBlink {
+      0%, 45% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(220,53,69,0);
+      }
+      50% {
+        opacity: 0.35;
+        transform: scale(1.02);
+        box-shadow: 0 0 18px rgba(220,53,69,0.45);
+      }
+      55%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(220,53,69,0);
+      }
+    }
+
+    .quiz-container {
+      display: none;
+      position: relative;
+      padding-top: 85px;
+      min-height: 100vh;
+    }
+
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 6px;
+      background: #28a745;
+      transition: 0.3s;
+      width: 0%;
+      border-radius: 14px 14px 0 0;
+    }
+
+    .main-menu-btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: calc(1rem + 4pt);
+      color: #333;
+      padding: 5px 0;
+    }
+
+    .header-info {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding-right: 110px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-width: 0;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+
+    .header-subject {
+      font-weight: normal;
+      color: #777;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .retry-badge {
+      display: none;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffe69c;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .question-title {
+      margin-top: 0;
+      margin-bottom: 16px;
+      line-height: 1.45;
+      font-size: 1.2rem;
+      color: #222;
+    }
+
+    .option-btn {
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      border: 2px solid #e9ecef;
+      background: #f8f9fa;
+      text-align: left;
+      cursor: pointer;
+      font-size: 1.05rem;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      position: relative;
+    }
+
+    .option-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+    }
+
+    .option-btn.correct {
+      background: #d4edda !important;
+      border-color: #28a745 !important;
+      color: #155724 !important;
+      font-weight: bold;
+    }
+
+    .option-btn.wrong {
+      background: #f8d7da !important;
+      border-color: #dc3545 !important;
+      color: #721c24 !important;
+      font-weight: bold;
+    }
+
+    .tick {
+      display: inline-block;
+      margin-left: 10px;
+      color: #1f9d45;
+      font-weight: bold;
+      opacity: 0;
+      transform: scale(0.4);
+    }
+
+    .tick.show {
+      animation: popTick 0.45s ease forwards;
+    }
+
+    @keyframes popTick {
+      0%   { opacity: 0; transform: scale(0.4); }
+      60%  { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .explanation {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      background: #eaf2f8;
+      border-left: 5px solid #2980b9;
+      border-radius: 8px;
+      line-height: 1.5;
+    }
+
+    .nav-controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 18px;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .next-btn { background: #007bff; }
+    .prev-btn {
+      background: #e9ecef;
+      color: #dc3545 !important;
+      border: 1px solid #ddd;
+    }
+
+    .quiz-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      color: #666;
+      font-weight: bold;
+      font-size: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .disclaimer-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fdfdfd;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      color: #888;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .disclaimer-title {
+      display: block;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+    }
+
+    .source-tag {
+      position: fixed;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(0, 0, 0, 0.05);
+      color: #777;
+      padding: 5px 10px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      z-index: 9999;
+    }
+
+    .reset-set-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: #ffc107;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    @media (max-width: 480px) {
+      .quiz-container {
+        padding-top: 110px;
+      }
+
+      .header-info {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        padding-right: 104px;
+        align-items: flex-start;
+      }
+
+      .header-left {
+        display: block;
+        padding-right: 6px;
+      }
+
+      .main-menu-btn {
+        display: block;
+        font-size: 0.95rem;
+        padding: 0;
+        margin-bottom: 6px;
+      }
+
+      .header-subject {
+        display: block;
+        margin: 0;
+        font-size: 0.82rem;
+        line-height: 1.3;
+        max-width: 100%;
+      }
+
+      .question-title {
+        font-size: 1.05rem;
+      }
+
+      .option-btn {
+        font-size: 1rem;
+        padding: 14px;
+      }
+
+      .reset-set-btn {
+        top: 12px;
+        right: 12px;
+        font-size: 0.75rem;
+        padding: 7px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="menuContainer" class="menu-container">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:20px;">
+      <h1 id="mainTitle" style="margin:0;">Anayasa 150 Soru Deneme Sınavı</h1>
+      <button onclick="clearAllStatistics()" style="background:#dc3545; color:white; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:0.75rem;">
+        Verileri Sıfırla
+      </button>
+<button onclick="shuffleAllQuestions()" style="background:#28a745;color:white;border:none;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;">Soruları Karıştır</button>
+
+    </div>
+
+    <div id="menuGrid" class="menu-grid"></div>
+
+    <div class="disclaimer-box">
+      <span class="disclaimer-title">⚠️ Önemli Uyarı</span>
+      Bu sistemde yer alan içerikler yalnızca eğitim amaçlıdır. İçeriklerin kullanımından doğabilecek doğrudan veya dolaylı hiçbir sorumluluk kabul edilmez. Tüm kullanım sorumluluğu kullanıcıya aittir.
+    </div>
+  </div>
+
+  <div id="quizContainer" class="quiz-container">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="header-info">
+      <div class="header-left">
+        <button onclick="showMenu()" class="main-menu-btn">☰ Ana Menü</button>
+        <span id="headerSubject" class="header-subject"></span>
+      </div>
+    </div>
+
+    <button onclick="resetCurrentSet()" class="reset-set-btn">Seti Sıfırla</button>
+
+    <div id="retryBadge" class="retry-badge">Yalnış cevaplanan soru</div>
+    <h2 id="questionText" class="question-title">...</h2>
+
+    <div id="optionsArea"></div>
+
+    <div class="quiz-footer">
+      <div id="footerLeft">Kalan: 0</div>
+      <div id="footerRight">0 / 0</div>
+    </div>
+
+    <div id="explanationArea" class="explanation"></div>
+
+    <div class="nav-controls">
+      <button id="prevBtn" class="nav-btn prev-btn" onclick="goBack()" style="visibility:hidden;">❮ Önceki</button>
+      <button id="nextBtn" class="nav-btn next-btn" onclick="goForward()" style="visibility:hidden;">Yeni Soru ❯</button>
+    </div>
+  </div>
+</div>
+
+<div class="source-tag" id="sourceTag">Kaynak: anayasa_150_soru</div>
+
+<script>
+  const BASE_SUBJECT = "Anayasa 150 Soru";
+  const VERSION_NUMBER = 1;
+
+  function buildVersionName(base, version) {
+    return `${base} Versiyon ${version}`;
+  }
+
+  function buildVersionSlug(base, version) {
+    return `${base.toLowerCase().replace(/ç/g, "c").replace(/ğ/g, "g").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ş/g, "s").replace(/ü/g, "u").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "")}_versiyon_${version}`;
+  }
+
+  const CURRENT_SUBJECT = BASE_SUBJECT;
+  const VERSION_SLUG = buildVersionSlug(BASE_SUBJECT, VERSION_NUMBER);
+  const SOURCE_TEXT = `Kaynak: anayasa_150_soru`;
+  const QUESTIONS_PER_SET = 30;
+
+  const questions = [
+  {
+    "q": "Anayasa’ya göre temel hak ve hürriyetlerin “dokunulmaz, devredilmez ve vazgeçilmez” olması aşağıdakilerden hangisini ifade eder?",
+    "o": [
+      "Hakların devlet tarafından kaldırılabileceğini",
+      "Hakların kişiye bağlı olduğunu ve başkasına devredilemeyeceğini",
+      "Hakların sadece vatandaşlara ait olduğunu",
+      "Hakların yalnızca olağanüstü hallerde geçerli olduğunu"
+    ],
+    "c": 1,
+    "e": "Temel haklar kişiye bağlıdır, devredilemez ve vazgeçilemez niteliktedir."
+  },
+  {
+    "q": "Temel hak ve hürriyetlerin sınırlandırılması ile ilgili aşağıdakilerden hangisi yanlıştır?",
+    "o": [
+      "Sadece kanunla yapılabilir",
+      "Ölçülülük ilkesine uygun olmalıdır",
+      "Hakkın özüne dokunulabilir",
+      "Demokratik toplum düzenine aykırı olamaz"
+    ],
+    "c": 2,
+    "e": "Sınırlandırma yapılırken hakkın özüne dokunulamaz."
+  },
+  {
+    "q": "Temel hak ve hürriyetlerin sınırlandırılması aşağıdakilerden hangisine dayanmalıdır?",
+    "o": [
+      "Bakanlık genelgelerine",
+      "Cumhurbaşkanı kararnamesine",
+      "Anayasanın ilgili maddesindeki özel sebeplere",
+      "Yerel yönetim kararlarına"
+    ],
+    "c": 2,
+    "e": "Sınırlandırma Anayasa’daki ilgili maddelerde belirtilen özel sebeplere dayanmalıdır."
+  },
+  {
+    "q": "Olağanüstü hallerde temel hak ve hürriyetlerin durdurulması ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Haklar tamamen ortadan kaldırılır",
+      "Haklar yalnızca bireysel suçlarda durdurulur",
+      "Hakların kullanımı kısmen veya tamamen durdurulabilir",
+      "Hiçbir şekilde haklara müdahale edilemez"
+    ],
+    "c": 2,
+    "e": "Olağanüstü hallerde hakların kullanımı kısmen veya tamamen durdurulabilir."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi savaş halinde bile dokunulamayacak çekirdek haklardan biri değildir?",
+    "o": [
+      "Yaşama hakkı",
+      "Suç ve cezaların geçmişe yürütülememesi",
+      "Din ve vicdan özgürlüğü",
+      "Seyahat özgürlüğü"
+    ],
+    "c": 3,
+    "e": "Seyahat özgürlüğü çekirdek haklar arasında yer almaz."
+  },
+  {
+    "q": "Bireysel suçlarda yakalanan kişi en geç ne kadar süre içinde hâkim önüne çıkarılmalıdır?",
+    "o": [
+      "24 saat",
+      "36 saat",
+      "48 saat",
+      "72 saat"
+    ],
+    "c": 2,
+    "e": "Bireysel suçlarda yakalanan kişi en geç 48 saat içinde hâkim önüne çıkarılır."
+  },
+  {
+    "q": "Toplu suçlarda gözaltı süresi en fazla ne kadardır?",
+    "o": [
+      "2 gün",
+      "3 gün",
+      "4 gün",
+      "5 gün"
+    ],
+    "c": 2,
+    "e": "Toplu suçlarda en fazla 4 gün içinde hâkim önüne çıkarılmalıdır."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi özel hayatın korunması kapsamındaki haklardan biri değildir?",
+    "o": [
+      "Haberleşme hürriyeti",
+      "Konut dokunulmazlığı",
+      "Düşünce özgürlüğü",
+      "Özel hayatın gizliliği"
+    ],
+    "c": 2,
+    "e": "Düşünce özgürlüğü ayrı bir hak olup özel hayatın üçlü koruma alanına girmez."
+  },
+  {
+    "q": "Hakim kararı olmadan arama yapılabilmesi hangi durumda mümkündür?",
+    "o": [
+      "Her durumda",
+      "Bakan onayıyla",
+      "Gecikmesinde sakınca bulunan hallerde yetkili merciin yazılı emriyle",
+      "Kolluk kuvvetlerinin kararıyla"
+    ],
+    "c": 2,
+    "e": "İstisnai olarak gecikmesinde sakınca bulunan hallerde yetkili merci yazılı emir verebilir."
+  },
+  {
+    "q": "Basın hürriyeti ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Basın sansüre tabidir",
+      "Basın tamamen sınırsızdır",
+      "Basın hürdür, sansür edilemez",
+      "Basın sadece devlet kontrolündedir"
+    ],
+    "c": 2,
+    "e": "Anayasa’ya göre basın hürdür ve sansür edilemez."
+  },
+  {
+    "q": "Basın yayın araçlarının toplatılması hangi şartla mümkündür?",
+    "o": [
+      "Polis kararıyla",
+      "Savcı talimatıyla",
+      "Sadece hâkim kararıyla",
+      "Valilik kararıyla"
+    ],
+    "c": 2,
+    "e": "Toplatma kararı kural olarak hâkim kararıyla verilir."
+  },
+  {
+    "q": "Dernek kurma hürriyeti ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Önceden izin alınması gerekir",
+      "Herkes önceden izin almaksızın dernek kurabilir",
+      "Sadece kamu görevlileri kurabilir",
+      "Devlet izni olmadan kurulamaz"
+    ],
+    "c": 1,
+    "e": "Dernek kurma hürriyeti önceden izin alınmaksızın kullanılabilir."
+  },
+  {
+    "q": "Dernek faaliyetlerinin durdurulması kural olarak nasıl yapılır?",
+    "o": [
+      "Valilik kararıyla",
+      "Kolluk kararıyla",
+      "Hâkim kararıyla",
+      "Belediye kararıyla"
+    ],
+    "c": 2,
+    "e": "Dernek faaliyetlerinin durdurulması kural olarak hâkim kararıyla olur."
+  },
+  {
+    "q": "Suç ve cezalarla ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Cezalar geriye yürütülebilir",
+      "Suç ve ceza kanunla konulmaz",
+      "Masumiyet karinesi yoktur",
+      "Ceza sorumluluğu şahsidir"
+    ],
+    "c": 3,
+    "e": "Ceza sorumluluğu şahsidir ve kişiye aittir."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi suç ve cezalara ilişkin ilkelerden biri değildir?",
+    "o": [
+      "Kanunilik",
+      "Masumiyet karinesi",
+      "İdari hapis cezası uygulanması",
+      "Delillerin hukuka uygun olması"
+    ],
+    "c": 2,
+    "e": "İdari hapis cezası uygulanamaz; bu anayasal ilkelere aykırıdır."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi zorla çalıştırma yasağı kapsamında değildir?",
+    "o": [
+      "Angarya",
+      "Olağanüstü hallerde istenen hizmetler",
+      "Kişinin rızası dışında çalıştırılması",
+      "Zorunlu kamu hizmetleri"
+    ],
+    "c": 1,
+    "e": "Olağanüstü hallerde istenen hizmetler angarya sayılmaz."
+  },
+  {
+    "q": "Yerleşme ve seyahat hürriyeti hangi durumda sınırlandırılabilir?",
+    "o": [
+      "Her durumda",
+      "Yalnızca valilik kararıyla",
+      "Suç soruşturması veya kovuşturması sebebiyle hâkim kararıyla",
+      "Sadece Cumhurbaşkanı kararıyla"
+    ],
+    "c": 2,
+    "e": "Bu özgürlük suç soruşturması veya kovuşturması sebebiyle hâkim kararıyla sınırlandırılabilir."
+  },
+  {
+    "q": "Din ve vicdan hürriyeti ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Din eğitimi tamamen serbesttir",
+      "Din kültürü ve ahlak öğretimi zorunlu derslerdendir",
+      "Hiçbir şekilde din eğitimi verilemez",
+      "Sadece özel okullarda verilir"
+    ],
+    "c": 1,
+    "e": "Din kültürü ve ahlak öğretimi anayasa gereği zorunlu derslerdendir."
+  },
+  {
+    "q": "Mülkiyet hakkı hangi amaçla sınırlandırılabilir?",
+    "o": [
+      "Sadece devlet isteğiyle",
+      "Kamu yararı amacıyla",
+      "Özel sektör talebiyle",
+      "Belediye kararıyla"
+    ],
+    "c": 1,
+    "e": "Mülkiyet hakkı kamu yararı amacıyla sınırlandırılabilir."
+  },
+  {
+    "q": "Devletin hakların korunmasına ilişkin yükümlülüklerinden biri değildir?",
+    "o": [
+      "Başvuru yollarını açık tutmak",
+      "Yol gösterme zorunluluğu",
+      "Ceza verme yetkisi",
+      "Tazminat ödeme"
+    ],
+    "c": 2,
+    "e": "Devletin yükümlülükleri başvuru, yol gösterme ve tazminattır."
+  },
+  {
+    "q": "Devletin yol gösterme yükümlülüğü neyi ifade eder?",
+    "o": [
+      "Vatandaşlara ücretsiz eğitim vermek",
+      "Başvurulacak kanun yollarını ve mercileri belirtmek",
+      "Mahkeme kararlarını uygulamak",
+      "Vergi toplamak"
+    ],
+    "c": 1,
+    "e": "Devlet bireylere hangi kanun yollarına başvuracaklarını göstermek zorundadır."
+  },
+  {
+    "q": "Ailenin korunması ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Aile devlet koruması altında değildir",
+      "Aile toplumun temelidir",
+      "Eşler arasında eşitlik yoktur",
+      "Çocukların korunması devletin görevi değildir"
+    ],
+    "c": 1,
+    "e": "Anayasaya göre aile toplumun temelidir ve devlet koruması altındadır."
+  },
+  {
+    "q": "Eğitim ve öğrenim hakkı ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Eğitim sadece bir haktır",
+      "Eğitim hem hak hem ödevdir",
+      "Eğitim yalnızca özel kurumlarda verilir",
+      "Eğitim paralıdır"
+    ],
+    "c": 1,
+    "e": "Eğitim anayasa gereği hem hak hem de ödevdir."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi eğitim hakkının özelliklerinden biri değildir?",
+    "o": [
+      "Evrensellik",
+      "Devlet denetimi",
+      "Zorunluluk ve parasızlık (ilköğretim)",
+      "Özel sektör denetimi"
+    ],
+    "c": 3,
+    "e": "Eğitim devletin gözetim ve denetimi altındadır, özel sektör denetimi yoktur."
+  },
+  {
+    "q": "Gençliğin korunması kapsamında devletin görevi nedir?",
+    "o": [
+      "Gençleri ekonomik faaliyetlere yönlendirmek",
+      "Gençleri zararlı alışkanlıklardan korumak",
+      "Gençleri zorunlu çalıştırmak",
+      "Gençleri sadece sporla ilgilendirmek"
+    ],
+    "c": 1,
+    "e": "Devlet gençleri kötü alışkanlıklardan koruyucu tedbirler alır."
+  },
+  {
+    "q": "Sporun geliştirilmesi ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Spor faaliyetleri devlet denetiminde değildir",
+      "Sporcular korunmaz",
+      "Devlet başarılı sporcuları korur",
+      "Spor tamamen özel sektöre bırakılmıştır"
+    ],
+    "c": 2,
+    "e": "Devlet başarılı sporcuları korumakla yükümlüdür."
+  },
+  {
+    "q": "Kıyılarla ilgili temel ilke aşağıdakilerden hangisidir?",
+    "o": [
+      "Özel mülkiyete tabidir",
+      "Öncelikle kamu yararı gözetilir",
+      "Sadece belediyeye aittir",
+      "Özel şirketlere devredilir"
+    ],
+    "c": 1,
+    "e": "Kıyılar kamu yararı gözetilerek devletin hüküm ve tasarrufu altındadır."
+  },
+  {
+    "q": "Toprak mülkiyeti ile ilgili devletin amacı nedir?",
+    "o": [
+      "Toprağı özelleştirmek",
+      "Topraksız çiftçiye toprak sağlamak",
+      "Tarımı kaldırmak",
+      "Yalnızca büyük işletmeleri desteklemek"
+    ],
+    "c": 1,
+    "e": "Devlet topraksız çiftçiye toprak sağlamayı amaçlar."
+  },
+  {
+    "q": "Kamulaştırma ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Özel mülkiyet kamulaştırılamaz",
+      "Bedel taksitle ödenemez",
+      "Kamu yararı amacıyla yapılır",
+      "Bedel ödenmeden yapılabilir"
+    ],
+    "c": 2,
+    "e": "Kamulaştırma kamu yararı amacıyla yapılır."
+  },
+  {
+    "q": "Kamulaştırmada bedelin ödenmesi ile ilgili doğru ifade hangisidir?",
+    "o": [
+      "Bedel taksitle ödenemez",
+      "Bedel ayni olarak ödenir",
+      "Bedel nakden ve peşin ödenir",
+      "Bedel sadece devlet tahvili ile ödenir"
+    ],
+    "c": 2,
+    "e": "Kamulaştırmada bedel kural olarak nakden ve peşin ödenir."
+  },
+  {
+    "q": "Kıyılarla ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Özel mülkiyete konu olabilir",
+      "Devletin hüküm ve tasarrufu altındadır",
+      "Belediyelere aittir",
+      "Sadece turizm amaçlı kullanılabilir"
+    ],
+    "c": 1,
+    "e": "Kıyılar kamu yararı gözetilerek devletin hüküm ve tasarrufu altındadır."
+  },
+  {
+    "q": "Toprağın verimli işletilmesi ve topraksız çiftçiye toprak sağlanması hangi madde kapsamındadır?",
+    "o": [
+      "Madde 43",
+      "Madde 44",
+      "Madde 45",
+      "Madde 46"
+    ],
+    "c": 1,
+    "e": "Toprak mülkiyeti ve topraksız çiftçiye toprak sağlanması Madde 44 kapsamındadır."
+  },
+  {
+    "q": "Tarım arazilerinin korunması ve geliştirilmesi hangi madde ile düzenlenmiştir?",
+    "o": [
+      "Madde 43",
+      "Madde 44",
+      "Madde 45",
+      "Madde 46"
+    ],
+    "c": 2,
+    "e": "Tarım arazilerinin korunması Madde 45’te düzenlenmiştir."
+  },
+  {
+    "q": "Kamulaştırma ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Sadece özel kişiler tarafından yapılabilir",
+      "Kamu yararı amacı aranmaz",
+      "Bedel kural olarak peşin ve nakden ödenir",
+      "Bedel hiç ödenmeyebilir"
+    ],
+    "c": 2,
+    "e": "Kamulaştırmada bedel kural olarak nakden ve peşin ödenir."
+  },
+  {
+    "q": "Kamulaştırmada taksitle ödeme hangi durumda mümkündür?",
+    "o": [
+      "Her durumda",
+      "Sadece küçük projelerde",
+      "Büyük enerji ve sulama projeleri gibi durumlarda",
+      "Sadece belediye kararlarında"
+    ],
+    "c": 2,
+    "e": "Taksitle ödeme bazı büyük projelerde istisna olarak mümkündür."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi devletleştirme ile ilgilidir?",
+    "o": [
+      "Taşınmaz malların alınması",
+      "Kamu hizmeti niteliği taşıyan özel teşebbüslerin devlete geçirilmesi",
+      "Vergi alınması",
+      "Kıyıların kullanımı"
+    ],
+    "c": 1,
+    "e": "Devletleştirme kamu hizmeti niteliğindeki özel teşebbüslerin devlete geçirilmesidir."
+  },
+  {
+    "q": "Özelleştirme ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Sadece mahkeme kararıyla yapılır",
+      "Esas ve usulleri kanunla düzenlenir",
+      "Kamu yararı aranmaz",
+      "Bedel ödenmez"
+    ],
+    "c": 1,
+    "e": "Özelleştirmenin esas ve usulleri kanunla belirlenir."
+  },
+  {
+    "q": "Çalışma hakkı ve hürriyeti ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Sadece devlet sektöründe geçerlidir",
+      "Herkes istediği alanda çalışma hakkına sahiptir",
+      "Zorunlu çalışma vardır",
+      "Sadece erkekler için geçerlidir"
+    ],
+    "c": 1,
+    "e": "Herkes dilediği alanda çalışma ve sözleşme hürriyetine sahiptir."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi çalışma şartları kapsamında doğru bir ifadedir?",
+    "o": [
+      "Küçükler ağır işlerde çalıştırılabilir",
+      "Kadınlar her işte zorla çalıştırılabilir",
+      "Kimse gücüne uymayan işlerde çalıştırılamaz",
+      "Çalışma şartları tamamen serbesttir"
+    ],
+    "c": 2,
+    "e": "Kimse yaşına ve gücüne uymayan işlerde çalıştırılamaz."
+  },
+  {
+    "q": "Sendika kurma hakkı ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Önceden izin alınmalıdır",
+      "Sadece işçiler kurabilir",
+      "Önceden izin almaksızın kurulabilir",
+      "Devlet onayı şarttır"
+    ],
+    "c": 2,
+    "e": "Sendika kurma hakkı önceden izin alınmaksızın kullanılabilir."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi sendika hakkına ilişkin yasaklardan biridir?",
+    "o": [
+      "Sendika kurma",
+      "Sendikaya zorla üye yapma",
+      "Sendika faaliyetleri",
+      "Toplu sözleşme"
+    ],
+    "c": 1,
+    "e": "Hiç kimse bir sendikaya üye olmaya veya üyelikten ayrılmaya zorlanamaz."
+  },
+  {
+    "q": "Memurlar için aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Grev hakları vardır",
+      "Toplu iş sözleşmesi yaparlar",
+      "Toplu sözleşme hakları vardır",
+      "Hiçbir hakları yoktur"
+    ],
+    "c": 2,
+    "e": "Memurların toplu sözleşme hakkı vardır, grev hakkı yoktur."
+  },
+  {
+    "q": "Toplu iş sözleşmesi kimler arasında yapılır?",
+    "o": [
+      "Devlet ile vatandaş arasında",
+      "İşçi ile işveren arasında",
+      "Belediye ile şirket arasında",
+      "Bakanlık ile memur arasında"
+    ],
+    "c": 1,
+    "e": "Toplu iş sözleşmesi işçi ve işveren arasında yapılır."
+  },
+  {
+    "q": "Grev ve lokavt ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Memurlar grev yapabilir",
+      "Grev hakkı sadece işçilere aittir",
+      "Lokavt yasaktır",
+      "Grev tüm çalışanlara aittir"
+    ],
+    "c": 1,
+    "e": "Grev hakkı işçilere tanınmıştır, memurlar için geçerli değildir."
+  },
+  {
+    "q": "Ücrette adalet sağlanması ile ilgili temel ilke nedir?",
+    "o": [
+      "Ücret devlet tarafından belirlenir",
+      "Ücret emeğin karşılığıdır",
+      "Ücret sabittir",
+      "Ücret sadece özel sektöre aittir"
+    ],
+    "c": 1,
+    "e": "Ücret emeğin karşılığıdır ve adaletli olması gerekir."
+  },
+  {
+    "q": "Türk vatandaşlığı ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Sadece doğumla kazanılır",
+      "Kanunun gösterdiği şartlarla kazanılır ve kaybedilir",
+      "Hiçbir şekilde kaybedilemez",
+      "Sadece Cumhurbaşkanı kararıyla kazanılır"
+    ],
+    "c": 1,
+    "e": "Vatandaşlık kanunda belirtilen şartlarla kazanılır ve kaybedilir."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi vatandaşlıktan çıkarılma ile ilgili doğru bir ifadedir?",
+    "o": [
+      "Her durumda çıkarılabilir",
+      "Yargı yolu kapalıdır",
+      "Keyfi olarak çıkarılabilir",
+      "Karar ve işlemlere karşı yargı yolu açıktır"
+    ],
+    "c": 3,
+    "e": "Vatandaşlıktan çıkarma işlemlerine karşı yargı yolu kapatılamaz."
+  },
+  {
+    "q": "Seçme ve seçilme hakkı ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Sadece erkeklere aittir",
+      "21 yaşını doldurmak gerekir",
+      "18 yaşını dolduran vatandaşlar kullanabilir",
+      "Sadece belirli meslek gruplarına tanınır"
+    ],
+    "c": 2,
+    "e": "Seçme ve halkoylamasına katılma yaşı 18’dir."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi seçimlerin temel ilkelerinden biri değildir?",
+    "o": [
+      "Serbest",
+      "Gizli oy",
+      "Açık oy",
+      "Genel oy"
+    ],
+    "c": 2,
+    "e": "Seçimler gizli oy, açık sayım esasına dayanır; açık oy ilkesi yoktur."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi oy kullanamayacak kişilerden biridir?",
+    "o": [
+      "Üniversite öğrencileri",
+      "Silah altında bulunan er ve erbaşlar",
+      "Serbest meslek sahipleri",
+      "Emekliler"
+    ],
+    "c": 1,
+    "e": "Silah altında bulunan er ve erbaşlar oy kullanamaz."
+  },
+  {
+    "q": "Seçim kanunlarında yapılan değişiklikler ne zaman uygulanır?",
+    "o": [
+      "Hemen uygulanır",
+      "6 ay sonra uygulanır",
+      "1 yıl içinde yapılacak seçimlerde uygulanmaz",
+      "5 yıl sonra uygulanır"
+    ],
+    "c": 2,
+    "e": "Seçim kanunu değişiklikleri 1 yıl içinde yapılacak seçimlerde uygulanmaz."
+  },
+  {
+    "q": "Siyasi partiler ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Önceden izin alarak kurulur",
+      "Demokratik siyasi hayatın vazgeçilmez unsurlarıdır",
+      "Sadece devlet tarafından kurulur",
+      "Ticari faaliyet yürütürler"
+    ],
+    "c": 1,
+    "e": "Siyasi partiler demokratik siyasi hayatın vazgeçilmez unsurlarıdır."
+  },
+  {
+    "q": "Siyasi partilere üye olabilmek için gereken yaş kaçtır?",
+    "o": [
+      "16",
+      "18",
+      "20",
+      "21"
+    ],
+    "c": 1,
+    "e": "Parti üyeliği için 18 yaşını doldurmuş olmak gerekir."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi siyasi partilere üye olamaz?",
+    "o": [
+      "İşçiler",
+      "Öğretmenler",
+      "Hakimler ve savcılar",
+      "Esnaflar"
+    ],
+    "c": 2,
+    "e": "Hakimler ve savcılar siyasi partilere üye olamaz."
+  },
+  {
+    "q": "Siyasi partilerin mali denetimini hangi kurum yapar?",
+    "o": [
+      "TBMM",
+      "Sayıştay",
+      "Anayasa Mahkemesi",
+      "Danıştay"
+    ],
+    "c": 2,
+    "e": "Siyasi partilerin mali denetimini Anayasa Mahkemesi yapar."
+  },
+  {
+    "q": "Siyasi partilerin kapatılması davasını kim açar?",
+    "o": [
+      "Cumhurbaşkanı",
+      "TBMM Başkanı",
+      "Yargıtay Cumhuriyet Başsavcısı",
+      "Adalet Bakanı"
+    ],
+    "c": 2,
+    "e": "Parti kapatma davasını Yargıtay Cumhuriyet Başsavcısı açar."
+  },
+  {
+    "q": "Siyasi partilerin kapatılmasına kim karar verir?",
+    "o": [
+      "TBMM",
+      "Danıştay",
+      "Yargıtay",
+      "Anayasa Mahkemesi"
+    ],
+    "c": 3,
+    "e": "Kapatma kararını Anayasa Mahkemesi verir."
+  },
+  {
+    "q": "Kapatılan bir siyasi partinin üyeleri başka bir partide ne kadar süreyle görev alamaz?",
+    "o": [
+      "2 yıl",
+      "3 yıl",
+      "5 yıl",
+      "10 yıl"
+    ],
+    "c": 2,
+    "e": "Kapatmaya sebep olan üyeler 5 yıl süreyle başka partide görev alamaz."
+  },
+  {
+    "q": "Kamu hizmetine girme hakkı ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Sadece belirli kişilere tanınır",
+      "Her Türkün hakkıdır",
+      "Sadece devlet memurlarına aittir",
+      "Kadınlara verilmez"
+    ],
+    "c": 1,
+    "e": "Kamu hizmetine girme her Türkün hakkıdır."
+  },
+  {
+    "q": "Mal bildirimi ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "İsteğe bağlıdır",
+      "Sadece özel sektör için geçerlidir",
+      "Kamu hizmetine girenler için zorunludur",
+      "Sadece milletvekilleri için geçerlidir"
+    ],
+    "c": 2,
+    "e": "Kamu hizmetine girenler mal bildiriminde bulunmak zorundadır."
+  },
+  {
+    "q": "Vatan hizmeti ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Sadece erkeklere aittir",
+      "Sadece gönüllülük esasına dayanır",
+      "Her Türkün hem hakkı hem ödevidir",
+      "Sadece savaş zamanında yapılır"
+    ],
+    "c": 2,
+    "e": "Vatan hizmeti anayasaya göre her Türk için hem hak hem ödevdir."
+  },
+  {
+    "q": "Vergi ödevi ile ilgili temel ilke aşağıdakilerden hangisidir?",
+    "o": [
+      "Herkes eşit vergi öder",
+      "Herkes mali gücüne göre vergi öder",
+      "Vergi isteğe bağlıdır",
+      "Sadece çalışanlar vergi öder"
+    ],
+    "c": 1,
+    "e": "Vergi ödevi mali güce göre belirlenir."
+  },
+  {
+    "q": "Vergilerin konulması, değiştirilmesi ve kaldırılması hangi şekilde olur?",
+    "o": [
+      "Yönetmelikle",
+      "Cumhurbaşkanı kararnamesiyle",
+      "Kanunla",
+      "Genelgeyle"
+    ],
+    "c": 2,
+    "e": "Vergiler ancak kanunla konulur, değiştirilir veya kaldırılır."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi vergi ile ilgili istisnai bir durumdur?",
+    "o": [
+      "Vergilerin tamamen kaldırılması",
+      "Vergi oranlarının Cumhurbaşkanı tarafından belirlenmesi",
+      "Vergi oranlarında değişiklik yetkisinin kanunun belirlediği sınırlar içinde Cumhurbaşkanına verilmesi",
+      "Vergilerin yerel yönetimlerce belirlenmesi"
+    ],
+    "c": 2,
+    "e": "Kanunun belirlediği sınırlar içinde vergi oranlarını değiştirme yetkisi Cumhurbaşkanına verilebilir."
+  },
+  {
+    "q": "Dilekçe hakkı ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Sadece vatandaşlara tanınır",
+      "Sadece memurlara tanınır",
+      "Vatandaşlar ve karşılıklılık esasına göre yabancılar kullanabilir",
+      "Hiç kimse kullanamaz"
+    ],
+    "c": 2,
+    "e": "Dilekçe hakkı vatandaşlar ve karşılıklılık esasına göre yabancılara tanınır."
+  },
+  {
+    "q": "Kamu Denetçiliği Kurumu (Ombudsman) kime bağlıdır?",
+    "o": [
+      "Cumhurbaşkanına",
+      "TBMM’ye",
+      "Yargıtay’a",
+      "Danıştay’a"
+    ],
+    "c": 1,
+    "e": "Kamu Denetçiliği Kurumu TBMM Başkanlığına bağlıdır."
+  },
+  {
+    "q": "Kamu Başdenetçisi kim tarafından seçilir?",
+    "o": [
+      "Cumhurbaşkanı",
+      "Yargıtay",
+      "TBMM",
+      "Anayasa Mahkemesi"
+    ],
+    "c": 2,
+    "e": "Kamu Başdenetçisini TBMM seçer."
+  },
+  {
+    "q": "Kamu Başdenetçisinin görev süresi ne kadardır?",
+    "o": [
+      "3 yıl",
+      "4 yıl",
+      "5 yıl",
+      "6 yıl"
+    ],
+    "c": 1,
+    "e": "Kamu Başdenetçisi 4 yıl için seçilir."
+  },
+  {
+    "q": "Cumhurbaşkanı seçilebilmek için gerekli yaş şartı nedir?",
+    "o": [
+      "35",
+      "40",
+      "45",
+      "50"
+    ],
+    "c": 1,
+    "e": "Cumhurbaşkanı adaylığı için 40 yaşını doldurmuş olmak gerekir."
+  },
+  {
+    "q": "Cumhurbaşkanının görev süresi ne kadardır?",
+    "o": [
+      "4 yıl",
+      "5 yıl",
+      "6 yıl",
+      "7 yıl"
+    ],
+    "c": 1,
+    "e": "Cumhurbaşkanının görev süresi 5 yıldır."
+  },
+  {
+    "q": "Bir kişi en fazla kaç defa Cumhurbaşkanı seçilebilir?",
+    "o": [
+      "1",
+      "2",
+      "3",
+      "Sınırsız"
+    ],
+    "c": 1,
+    "e": "Bir kişi en fazla iki defa Cumhurbaşkanı seçilebilir."
+  },
+  {
+    "q": "Cumhurbaşkanı adayını aşağıdakilerden hangisi gösterebilir?",
+    "o": [
+      "Sadece TBMM",
+      "Sadece Cumhurbaşkanı",
+      "Siyasi parti grupları, belirli oy oranına sahip partiler ve seçmenler",
+      "Sadece Yargıtay"
+    ],
+    "c": 2,
+    "e": "Aday gösterme yetkisi siyasi partiler ve seçmenlere tanınmıştır."
+  },
+  {
+    "q": "Cumhurbaşkanı seçiminde ilk turda çoğunluk sağlanamazsa ne olur?",
+    "o": [
+      "Seçim iptal edilir",
+      "TBMM seçer",
+      "İkinci tur oylama yapılır",
+      "En çok oyu alan seçilir"
+    ],
+    "c": 2,
+    "e": "İlk turda çoğunluk sağlanamazsa ikinci tur yapılır."
+  },
+  {
+    "q": "Cumhurbaşkanlığı andı nerede edilir?",
+    "o": [
+      "Anayasa Mahkemesi",
+      "Cumhurbaşkanlığı Sarayı",
+      "TBMM önünde",
+      "Yargıtay"
+    ],
+    "c": 2,
+    "e": "Cumhurbaşkanı TBMM önünde and içer."
+  },
+  {
+    "q": "Cumhurbaşkanı aşağıdakilerden hangisi ile ilgili yetkiye sahiptir?",
+    "o": [
+      "Kanun çıkarmak",
+      "Kanunları veto etmek",
+      "Mahkeme kararlarını değiştirmek",
+      "Vergi koymak"
+    ],
+    "c": 1,
+    "e": "Cumhurbaşkanı kanunları tekrar görüşülmek üzere TBMM’ye geri gönderebilir."
+  },
+  {
+    "q": "Cumhurbaşkanının aşağıdaki işlemlerinden hangisi tek başına yaptığı işlemlerden biridir?",
+    "o": [
+      "Bakan atama",
+      "Kanun teklif etme",
+      "TBMM’yi feshetme",
+      "Seçimlerin yenilenmesine karar verme"
+    ],
+    "c": 3,
+    "e": "Cumhurbaşkanı seçimlerin yenilenmesine tek başına karar verebilir."
+  },
+  {
+    "q": "Cumhurbaşkanının cezai sorumluluğu ile ilgili soruşturma açılması için TBMM’de gereken çoğunluk nedir?",
+    "o": [
+      "Salt çoğunluk",
+      "3/5",
+      "2/3",
+      "1/3"
+    ],
+    "c": 1,
+    "e": "Soruşturma açılması için TBMM’nin 3/5 çoğunluğu gerekir."
+  },
+  {
+    "q": "Cumhurbaşkanının Yüce Divan’a sevkine karar verilmesi için gerekli çoğunluk nedir?",
+    "o": [
+      "Salt çoğunluk",
+      "3/5",
+      "2/3",
+      "1/3"
+    ],
+    "c": 2,
+    "e": "Yüce Divan’a sevk için 2/3 çoğunluk gerekir."
+  },
+  {
+    "q": "Cumhurbaşkanı yardımcıları ve bakanlar kim tarafından atanır?",
+    "o": [
+      "TBMM",
+      "Yargıtay",
+      "Cumhurbaşkanı",
+      "Danıştay"
+    ],
+    "c": 2,
+    "e": "Cumhurbaşkanı yardımcıları ve bakanlar Cumhurbaşkanı tarafından atanır."
+  },
+  {
+    "q": "Cumhurbaşkanı yardımcıları ve bakanlar kime karşı sorumludur?",
+    "o": [
+      "TBMM",
+      "Cumhurbaşkanı",
+      "Yargıtay",
+      "Danıştay"
+    ],
+    "c": 1,
+    "e": "Cumhurbaşkanı yardımcıları ve bakanlar Cumhurbaşkanına karşı sorumludur."
+  },
+  {
+    "q": "TBMM kaç üyeden oluşur?",
+    "o": [
+      "550",
+      "600",
+      "650",
+      "500"
+    ],
+    "c": 1,
+    "e": "TBMM 600 milletvekilinden oluşur."
+  },
+  {
+    "q": "Milletvekili seçilme yaşı kaçtır?",
+    "o": [
+      "18",
+      "21",
+      "25",
+      "30"
+    ],
+    "c": 0,
+    "e": "Milletvekili seçilme yaşı 18’dir."
+  },
+  {
+    "q": "TBMM seçimleri kaç yılda bir yapılır?",
+    "o": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "c": 1,
+    "e": "TBMM seçimleri 5 yılda bir yapılır."
+  },
+  {
+    "q": "TBMM’nin görev ve yetkileri arasında aşağıdakilerden hangisi yoktur?",
+    "o": [
+      "Kanun koymak",
+      "Bütçeyi kabul etmek",
+      "Cumhurbaşkanı seçmek",
+      "Yargı kararlarını değiştirmek"
+    ],
+    "c": 3,
+    "e": "TBMM yargı kararlarını değiştiremez."
+  },
+  {
+    "q": "Kanun teklif etme yetkisi kime aittir?",
+    "o": [
+      "Cumhurbaşkanı",
+      "Bakanlar",
+      "Milletvekilleri",
+      "Yargıtay"
+    ],
+    "c": 2,
+    "e": "Kanun teklif etme yetkisi milletvekillerine aittir."
+  },
+  {
+    "q": "TBMM’de toplantı yeter sayısı nedir?",
+    "o": [
+      "1/3",
+      "1/4",
+      "2/3",
+      "Salt çoğunluk"
+    ],
+    "c": 0,
+    "e": "TBMM toplantı yeter sayısı üye tamsayısının 1/3’üdür."
+  },
+  {
+    "q": "TBMM’de karar yeter sayısı nedir?",
+    "o": [
+      "Katılanların salt çoğunluğu",
+      "1/3",
+      "2/3",
+      "3/5"
+    ],
+    "c": 0,
+    "e": "Kararlar katılanların salt çoğunluğuyla alınır."
+  },
+  {
+    "q": "Cumhurbaşkanının seçimlerin yenilenmesine karar vermesi halinde TBMM için ne olur?",
+    "o": [
+      "Sadece Cumhurbaşkanlığı seçimi yenilenir",
+      "TBMM görevine devam eder",
+      "TBMM seçimleri de yenilenir",
+      "TBMM feshedilir ve yeniden kurulmaz"
+    ],
+    "c": 2,
+    "e": "Seçimlerin yenilenmesi kararı her iki seçimi de kapsar."
+  },
+  {
+    "q": "Cumhurbaşkanı ile TBMM seçimleri hangi durumda birlikte yenilenir?",
+    "o": [
+      "Sadece savaş halinde",
+      "Cumhurbaşkanı veya TBMM seçimlerin yenilenmesine karar verdiğinde",
+      "Sadece Cumhurbaşkanı isterse",
+      "Sadece TBMM isterse"
+    ],
+    "c": 1,
+    "e": "Her iki organın da seçimlerin yenilenmesine karar verme yetkisi vardır."
+  },
+  {
+    "q": "TBMM’nin bilgi edinme yollarından biri değildir?",
+    "o": [
+      "Meclis araştırması",
+      "Genel görüşme",
+      "Soru",
+      "Gensoru"
+    ],
+    "c": 3,
+    "e": "Gensoru sistemi kaldırılmıştır."
+  },
+  {
+    "q": "TBMM’nin denetim yollarından biri olan yazılı soru ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Sadece Cumhurbaşkanına sorulabilir",
+      "Cumhurbaşkanı yardımcıları ve bakanlara sorulabilir",
+      "Yargı organlarına sorulabilir",
+      "Belediye başkanlarına sorulabilir"
+    ],
+    "c": 1,
+    "e": "Yazılı soru Cumhurbaşkanı yardımcıları ve bakanlara yöneltilir."
+  },
+  {
+    "q": "Meclis araştırması neyi ifade eder?",
+    "o": [
+      "Suç soruşturması yapılmasını",
+      "Bir konuda bilgi edinmek amacıyla yapılan incelemeyi",
+      "Kanun teklifini",
+      "Yargı kararını"
+    ],
+    "c": 1,
+    "e": "Meclis araştırması belirli bir konuda bilgi edinmek için yapılır."
+  },
+  {
+    "q": "Meclis soruşturması hangi amaçla yapılır?",
+    "o": [
+      "Kanun çıkarmak",
+      "Bilgi edinmek",
+      "Cumhurbaşkanı yardımcıları ve bakanların cezai sorumluluğunu araştırmak",
+      "Seçim yapmak"
+    ],
+    "c": 2,
+    "e": "Meclis soruşturması yürütme üyelerinin cezai sorumluluğu için yapılır."
+  },
+  {
+    "q": "Meclis soruşturması açılması için gerekli çoğunluk nedir?",
+    "o": [
+      "Salt çoğunluk",
+      "1/3",
+      "3/5",
+      "2/3"
+    ],
+    "c": 2,
+    "e": "Soruşturma açılması için 3/5 çoğunluk gerekir."
+  },
+  {
+    "q": "Cumhurbaşkanı yardımcıları ve bakanların Yüce Divan’a sevki için gereken çoğunluk nedir?",
+    "o": [
+      "Salt çoğunluk",
+      "1/3",
+      "3/5",
+      "2/3"
+    ],
+    "c": 3,
+    "e": "Yüce Divan’a sevk için 2/3 çoğunluk gerekir."
+  },
+  {
+    "q": "Bütçe kanun teklifi kim tarafından TBMM’ye sunulur?",
+    "o": [
+      "TBMM Başkanı",
+      "Cumhurbaşkanı",
+      "Maliye Bakanı",
+      "Sayıştay"
+    ],
+    "c": 1,
+    "e": "Bütçe kanun teklifini Cumhurbaşkanı sunar."
+  },
+  {
+    "q": "Bütçe kanun teklifinin TBMM’ye sunulma süresi ne kadardır?",
+    "o": [
+      "Mali yıl başından 30 gün önce",
+      "Mali yıl başından 45 gün önce",
+      "Mali yıl başından 60 gün önce",
+      "Mali yıl başından 75 gün önce"
+    ],
+    "c": 3,
+    "e": "Bütçe kanun teklifi mali yıl başından en az 75 gün önce sunulur."
+  },
+  {
+    "q": "Bütçe kanunu süresinde yürürlüğe girmezse ne uygulanır?",
+    "o": [
+      "Yeni bütçe yapılır",
+      "Cumhurbaşkanı karar verir",
+      "Geçici bütçe kanunu çıkarılır",
+      "Vergiler kaldırılır"
+    ],
+    "c": 2,
+    "e": "Bütçe çıkmazsa geçici bütçe kanunu uygulanır."
+  },
+  {
+    "q": "Geçici bütçe de çıkarılamazsa ne uygulanır?",
+    "o": [
+      "Önceki yıl bütçesi aynen uygulanır",
+      "Yeni seçim yapılır",
+      "Vergi alınmaz",
+      "Cumhurbaşkanı belirler"
+    ],
+    "c": 0,
+    "e": "Geçici bütçe de yoksa önceki yıl bütçesi uygulanır."
+  },
+  {
+    "q": "Kesin hesap kanun teklifi ne zaman TBMM’ye sunulur?",
+    "o": [
+      "Mali yıl bitmeden",
+      "Mali yıl başında",
+      "Mali yıl sonundan itibaren en geç 6 ay içinde",
+      "1 yıl sonra"
+    ],
+    "c": 2,
+    "e": "Kesin hesap kanun teklifi 6 ay içinde sunulur."
+  },
+  {
+    "q": "Yargı yetkisi kime aittir?",
+    "o": [
+      "TBMM",
+      "Cumhurbaşkanı",
+      "Bağımsız mahkemeler",
+      "Bakanlar"
+    ],
+    "c": 2,
+    "e": "Yargı yetkisi bağımsız mahkemeler tarafından kullanılır."
+  },
+  {
+    "q": "Hakimler görevlerinde aşağıdakilerden hangisine bağlıdır?",
+    "o": [
+      "Cumhurbaşkanına",
+      "TBMM’ye",
+      "Anayasa, kanun ve hukuka uygun vicdani kanaatlerine",
+      "Bakanlara"
+    ],
+    "c": 2,
+    "e": "Hakimler karar verirken anayasa, kanun ve vicdani kanaatlerine göre hareket eder."
+  },
+  {
+    "q": "Hakimlik teminatı ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Hakimler görevden kolayca alınabilir",
+      "Hakimler azledilebilir",
+      "Hakimler görevlerinde bağımsızdır ve güvencededir",
+      "Hakimler idari kararla görevden alınır"
+    ],
+    "c": 2,
+    "e": "Hakimlik teminatı, hakimlerin bağımsızlığını ve görev güvencesini sağlar."
+  },
+  {
+    "q": "Hiç kimse kanunen tabi olduğu mahkemeden başka bir merci önüne çıkarılamaz ilkesine ne ad verilir?",
+    "o": [
+      "Hukuk devleti",
+      "Doğal hakim ilkesi",
+      "Eşitlik ilkesi",
+      "Bağımsızlık ilkesi"
+    ],
+    "c": 1,
+    "e": "Bu ilke doğal hakim (kanuni hakim) ilkesidir."
+  },
+  {
+    "q": "Mahkemelerin bağımsızlığı ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Talimat alabilirler",
+      "Yasama organına bağlıdırlar",
+      "Hiçbir organ mahkemelere talimat veremez",
+      "Cumhurbaşkanına bağlıdırlar"
+    ],
+    "c": 2,
+    "e": "Mahkemeler bağımsızdır, hiçbir organ talimat veremez."
+  },
+  {
+    "q": "Hakimler ve savcılar hangi kurula bağlıdır?",
+    "o": [
+      "Anayasa Mahkemesi",
+      "Danıştay",
+      "Hâkimler ve Savcılar Kurulu",
+      "Yargıtay"
+    ],
+    "c": 2,
+    "e": "Hakimler ve savcılar Hâkimler ve Savcılar Kurulu’na bağlıdır."
+  },
+  {
+    "q": "Hâkimler ve Savcılar Kurulu kaç üyeden oluşur?",
+    "o": [
+      "7",
+      "9",
+      "11",
+      "13"
+    ],
+    "c": 3,
+    "e": "HSK toplam 13 üyeden oluşur."
+  },
+  {
+    "q": "Hâkimler ve Savcılar Kurulu’nun başkanı kimdir?",
+    "o": [
+      "TBMM Başkanı",
+      "Adalet Bakanı",
+      "Cumhurbaşkanı",
+      "Yargıtay Başkanı"
+    ],
+    "c": 1,
+    "e": "HSK’nın başkanı Adalet Bakanıdır."
+  },
+  {
+    "q": "Hâkimler ve Savcılar Kurulu üyelerinin bir kısmını kim seçer?",
+    "o": [
+      "Danıştay",
+      "Yargıtay",
+      "TBMM",
+      "Sayıştay"
+    ],
+    "c": 2,
+    "e": "HSK üyelerinin bir kısmını TBMM seçer."
+  },
+  {
+    "q": "Anayasa Mahkemesi kaç üyeden oluşur?",
+    "o": [
+      "11",
+      "13",
+      "15",
+      "17"
+    ],
+    "c": 2,
+    "e": "Anayasa Mahkemesi 15 üyeden oluşur."
+  },
+  {
+    "q": "Anayasa Mahkemesi üyelerini kim seçer?",
+    "o": [
+      "TBMM",
+      "Cumhurbaşkanı",
+      "Yargıtay",
+      "Danıştay"
+    ],
+    "c": 1,
+    "e": "AYM üyelerini Cumhurbaşkanı seçer."
+  },
+  {
+    "q": "Anayasa Mahkemesi üyelerinin görev süresi ne kadardır?",
+    "o": [
+      "8 yıl",
+      "10 yıl",
+      "12 yıl",
+      "15 yıl"
+    ],
+    "c": 2,
+    "e": "AYM üyeleri 12 yıl için seçilir."
+  },
+  {
+    "q": "Anayasa Mahkemesi başkanını kim seçer?",
+    "o": [
+      "TBMM",
+      "Cumhurbaşkanı",
+      "Mahkeme üyeleri",
+      "Yargıtay"
+    ],
+    "c": 2,
+    "e": "Başkan, AYM üyeleri arasından seçilir."
+  },
+  {
+    "q": "Anayasa Mahkemesi aşağıdakilerden hangisini denetler?",
+    "o": [
+      "Mahkeme kararlarını",
+      "Kanunların Anayasaya uygunluğunu",
+      "Belediye kararlarını",
+      "Valilik işlemlerini"
+    ],
+    "c": 1,
+    "e": "AYM kanunların Anayasaya uygunluğunu denetler."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi Anayasa Mahkemesinin görevlerinden biri değildir?",
+    "o": [
+      "Norm denetimi yapmak",
+      "Bireysel başvuruları incelemek",
+      "Yargıtay kararlarını bozmak",
+      "Siyasi partileri denetlemek"
+    ],
+    "c": 2,
+    "e": "AYM, Yargıtay kararlarını bozmaz."
+  },
+  {
+    "q": "Bireysel başvuru hakkı ne zaman getirilmiştir?",
+    "o": [
+      "1982",
+      "1995",
+      "2010",
+      "2017"
+    ],
+    "c": 2,
+    "e": "Bireysel başvuru hakkı 2010 anayasa değişikliği ile getirilmiştir."
+  },
+  {
+    "q": "Yargıtay’ın temel görevi nedir?",
+    "o": [
+      "İlk derece mahkemesi olmak",
+      "Danışmanlık yapmak",
+      "Temyiz incelemesi yapmak",
+      "Kanun yapmak"
+    ],
+    "c": 2,
+    "e": "Yargıtay temyiz merciidir."
+  },
+  {
+    "q": "Danıştay’ın görevi aşağıdakilerden hangisidir?",
+    "o": [
+      "Ceza yargılaması yapmak",
+      "İdari davalara bakmak",
+      "Kanun çıkarmak",
+      "Seçim yapmak"
+    ],
+    "c": 1,
+    "e": "Danıştay idari yargı organıdır."
+  },
+  {
+    "q": "Uyuşmazlık Mahkemesi hangi uyuşmazlıkları çözer?",
+    "o": [
+      "Ceza davaları",
+      "Hukuk davaları",
+      "Yargı yolu uyuşmazlıkları",
+      "İdari cezalar"
+    ],
+    "c": 2,
+    "e": "Uyuşmazlık Mahkemesi yargı yolu uyuşmazlıklarını çözer."
+  },
+  {
+    "q": "Sayıştay’ın görevi nedir?",
+    "o": [
+      "Yargılama yapmak",
+      "Denetim yapmak",
+      "Kanun çıkarmak",
+      "Yönetmelik hazırlamak"
+    ],
+    "c": 1,
+    "e": "Sayıştay kamu mali işlemlerini denetler."
+  },
+  {
+    "q": "Sayıştay aşağıdakilerden hangisini denetler?",
+    "o": [
+      "Özel şirketleri",
+      "Kamu idarelerinin mali işlemlerini",
+      "Belediyelerin sadece personel işlemlerini",
+      "Yargı kararlarını"
+    ],
+    "c": 1,
+    "e": "Sayıştay kamu idarelerinin gelir, gider ve mallarını denetler."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi yüksek mahkemelerden biri değildir?",
+    "o": [
+      "Yargıtay",
+      "Danıştay",
+      "Sayıştay",
+      "Bölge İdare Mahkemesi"
+    ],
+    "c": 3,
+    "e": "Bölge İdare Mahkemesi yüksek mahkeme değildir."
+  },
+  {
+    "q": "Hakimler ve Savcılar Kurulu üyelerinin görev süresi ne kadardır?",
+    "o": [
+      "2 yıl",
+      "3 yıl",
+      "4 yıl",
+      "6 yıl"
+    ],
+    "c": 2,
+    "e": "HSK üyeleri 4 yıl için seçilir."
+  },
+  {
+    "q": "Anayasa değişiklikleri ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Salt çoğunlukla kabul edilir",
+      "2/3 çoğunluk gerekir",
+      "Cumhurbaşkanı tek başına değiştirir",
+      "Yargıtay karar verir"
+    ],
+    "c": 1,
+    "e": "Anayasa değişiklikleri için nitelikli çoğunluk gerekir."
+  },
+  {
+    "q": "Anayasa değişiklik teklifleri TBMM’de en az kaç milletvekili tarafından verilebilir?",
+    "o": [
+      "100",
+      "200",
+      "300",
+      "360"
+    ],
+    "c": 1,
+    "e": "Teklif için en az 200 milletvekilinin imzası gerekir."
+  },
+  {
+    "q": "Anayasa değişikliklerinin halkoyuna sunulması hangi durumda zorunludur?",
+    "o": [
+      "Her durumda",
+      "2/3 çoğunlukla kabul edilirse",
+      "3/5 ile 2/3 arasında kabul edilirse",
+      "Cumhurbaşkanı istemezse"
+    ],
+    "c": 2,
+    "e": "3/5 ile 2/3 arasında kabul edilirse referanduma sunulur."
+  },
+  {
+    "q": "Cumhurbaşkanı anayasa değişikliğini geri gönderirse TBMM ne yapabilir?",
+    "o": [
+      "Tekrar görüşemez",
+      "Aynı şekilde kabul edemez",
+      "Aynı çoğunlukla tekrar kabul edebilir",
+      "Yargıya gönderir"
+    ],
+    "c": 2,
+    "e": "TBMM aynı çoğunlukla tekrar kabul edebilir."
+  },
+  {
+    "q": "Anayasanın değiştirilemez hükümleri ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Değiştirilebilir",
+      "Teklif edilebilir",
+      "Değiştirilmesi teklif dahi edilemez",
+      "Referandumla değiştirilebilir"
+    ],
+    "c": 2,
+    "e": "Değiştirilemez hükümler teklif dahi edilemez."
+  },
+  {
+    "q": "Anayasanın ilk üç maddesi ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Referandumla değiştirilebilir",
+      "TBMM kararıyla kaldırılabilir",
+      "Değiştirilemez ve teklif edilemez",
+      "Cumhurbaşkanı değiştirir"
+    ],
+    "c": 2,
+    "e": "İlk üç madde değiştirilemez ve teklif edilemez."
+  },
+  {
+    "q": "Türkiye Cumhuriyeti’nin şekli nedir?",
+    "o": [
+      "Monarşi",
+      "Cumhuriyet",
+      "Federasyon",
+      "Oligarşi"
+    ],
+    "c": 1,
+    "e": "Anayasa’ya göre devletin şekli Cumhuriyettir."
+  },
+  {
+    "q": "Türkiye Cumhuriyeti’nin nitelikleri arasında aşağıdakilerden hangisi yoktur?",
+    "o": [
+      "Demokratik",
+      "Laik",
+      "Sosyal",
+      "Teokratik"
+    ],
+    "c": 3,
+    "e": "Türkiye Cumhuriyeti teokratik değildir."
+  },
+  {
+    "q": "Devletin bütünlüğü ile ilgili doğru ifade hangisidir?",
+    "o": [
+      "Federal yapı vardır",
+      "Üniter devlet yapısı vardır",
+      "Eyalet sistemi vardır",
+      "Yerel yönetimler bağımsızdır"
+    ],
+    "c": 1,
+    "e": "Türkiye üniter devlet yapısına sahiptir."
+  },
+  {
+    "q": "Resmi dil aşağıdakilerden hangisidir?",
+    "o": [
+      "İngilizce",
+      "Arapça",
+      "Türkçe",
+      "Osmanlıca"
+    ],
+    "c": 2,
+    "e": "Devletin resmi dili Türkçedir."
+  },
+  {
+    "q": "Başkent neresidir?",
+    "o": [
+      "İstanbul",
+      "İzmir",
+      "Ankara",
+      "Bursa"
+    ],
+    "c": 2,
+    "e": "Türkiye’nin başkenti Ankara’dır."
+  },
+  {
+    "q": "Milli marş aşağıdakilerden hangisidir?",
+    "o": [
+      "Gençlik Marşı",
+      "İstiklal Marşı",
+      "Onuncu Yıl Marşı",
+      "Mehter Marşı"
+    ],
+    "c": 1,
+    "e": "Türkiye’nin milli marşı İstiklal Marşı’dır."
+  },
+  {
+    "q": "Türkiye Cumhuriyeti bayrağının özellikleri aşağıdakilerden hangisinde doğru verilmiştir?",
+    "o": [
+      "Beyaz zemin üzerine kırmızı ay-yıldız",
+      "Kırmızı zemin üzerine beyaz ay-yıldız",
+      "Mavi zemin üzerine beyaz yıldız",
+      "Yeşil zemin üzerine beyaz ay-yıldız"
+    ],
+    "c": 1,
+    "e": "Türk bayrağı kırmızı zemin üzerinde beyaz ay ve yıldızdan oluşur."
+  },
+  {
+    "q": "Anayasanın başlangıç kısmı ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Bağlayıcı değildir",
+      "Sadece semboliktir",
+      "Anayasa metnine dahildir ve bağlayıcıdır",
+      "Mahkemeler dikkate almaz"
+    ],
+    "c": 2,
+    "e": "Başlangıç kısmı anayasa metnine dahil olup bağlayıcıdır."
+  },
+  {
+    "q": "Anayasa hükümleri aşağıdakilerden hangisini bağlar?",
+    "o": [
+      "Sadece yasama organını",
+      "Sadece yürütmeyi",
+      "Yasama, yürütme, yargı organlarını ve kişileri",
+      "Sadece yargıyı"
+    ],
+    "c": 2,
+    "e": "Anayasa hükümleri tüm organları ve kişileri bağlar."
+  },
+  {
+    "q": "Anayasa hükümlerinin üstünlüğü ilkesi neyi ifade eder?",
+    "o": [
+      "Kanunların anayasanın üstünde olduğunu",
+      "Anayasanın tüm hukuk kurallarından üstün olduğunu",
+      "Yönetmeliklerin üstün olduğunu",
+      "Cumhurbaşkanı kararlarının üstün olduğunu"
+    ],
+    "c": 1,
+    "e": "Anayasa en üstün hukuk normudur."
+  },
+  {
+    "q": "Kanunların Anayasaya aykırı olamayacağı ilkesi aşağıdakilerden hangisidir?",
+    "o": [
+      "Hukuk devleti",
+      "Normlar hiyerarşisi",
+      "Laiklik",
+      "Eşitlik"
+    ],
+    "c": 1,
+    "e": "Normlar hiyerarşisine göre anayasa en üst normdur."
+  },
+  {
+    "q": "Anayasa hükümleri ile ilgili aşağıdakilerden hangisi doğrudur?",
+    "o": [
+      "Uygulanması isteğe bağlıdır",
+      "Doğrudan uygulanabilir",
+      "Sadece kanunla uygulanır",
+      "Mahkemeler uygulamaz"
+    ],
+    "c": 1,
+    "e": "Anayasa hükümleri doğrudan uygulanabilir."
+  },
+  {
+    "q": "Devlet organları ve idare makamları bütün işlemlerinde hangi ilkeye uymak zorundadır?",
+    "o": [
+      "Keyfilik",
+      "Eşitlik",
+      "Ayrımcılık",
+      "Özerklik"
+    ],
+    "c": 1,
+    "e": "Devlet organları işlemlerinde eşitlik ilkesine uymak zorundadır."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi anayasanın bağlayıcılığı ile ilgilidir?",
+    "o": [
+      "Sadece tavsiye niteliğindedir",
+      "Herkes için geçerli değildir",
+      "Tüm organ ve kişileri bağlar",
+      "Sadece devlet için geçerlidir"
+    ],
+    "c": 2,
+    "e": "Anayasa tüm organ ve kişileri bağlayıcıdır."
+  },
+  {
+    "q": "Anayasa hükümleri ile ilgili aşağıdakilerden hangisi yanlıştır?",
+    "o": [
+      "Üstün hukuk normudur",
+      "Herkesi bağlar",
+      "Kanunlara aykırı olabilir",
+      "Doğrudan uygulanabilir"
+    ],
+    "c": 2,
+    "e": "Kanunlar anayasa’ya aykırı olamaz."
+  },
+  {
+    "q": "Türkiye Cumhuriyeti’nin temel nitelikleri hangi maddede düzenlenmiştir?",
+    "o": [
+      "Madde 1",
+      "Madde 2",
+      "Madde 3",
+      "Madde 4"
+    ],
+    "c": 1,
+    "e": "Devletin nitelikleri Anayasa’nın 2. maddesinde yer alır."
+  },
+  {
+    "q": "Anayasa’nın değiştirilemeyecek hükümleri hangi maddede düzenlenmiştir?",
+    "o": [
+      "Madde 1",
+      "Madde 2",
+      "Madde 3",
+      "Madde 4"
+    ],
+    "c": 3,
+    "e": "Değiştirilemeyecek hükümler 4. maddede düzenlenmiştir."
+  },
+  {
+    "q": "Egemenlik aşağıdakilerden hangisine aittir?",
+    "o": [
+      "Cumhurbaşkanına",
+      "TBMM’ye",
+      "Millete",
+      "Yargıya"
+    ],
+    "c": 2,
+    "e": "Egemenlik kayıtsız şartsız millete aittir."
+  },
+  {
+    "q": "Egemenliğin kullanılması aşağıdakilerden hangisi ile olur?",
+    "o": [
+      "Sadece Cumhurbaşkanı ile",
+      "Sadece TBMM ile",
+      "Yetkili organlar eliyle",
+      "Yargı organları ile"
+    ],
+    "c": 2,
+    "e": "Egemenlik yetkili organlar eliyle kullanılır."
+  },
+  {
+    "q": "Hiçbir kimse veya organ kaynağını Anayasadan almayan bir devlet yetkisi kullanamaz ilkesi aşağıdakilerden hangisidir?",
+    "o": [
+      "Hukuk devleti",
+      "Yetki genişliği",
+      "Kanunilik ilkesi",
+      "Yetkinin kaynağı"
+    ],
+    "c": 2,
+    "e": "Bu ilke kanunilik ve anayasal yetki ilkesini ifade eder."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi anayasanın temel ilkelerinden biridir?",
+    "o": [
+      "Keyfi yönetim",
+      "Hukuk devleti",
+      "Mutlak monarşi",
+      "Teokrasi"
+    ],
+    "c": 1,
+    "e": "Türkiye Cumhuriyeti bir hukuk devletidir."
+  }
+];;
+
+  document.getElementById("mainTitle").textContent = `${BASE_SUBJECT} Deneme Sınavı`;
+  document.getElementById("headerSubject").textContent = BASE_SUBJECT;
+  document.getElementById("sourceTag").textContent = SOURCE_TEXT;
+  document.title = `${BASE_SUBJECT} Deneme Sınavı`;
+
+  if (performance.navigation.type === performance.navigation.TYPE_RELOAD || !sessionStorage.getItem("session_active")) {
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith(storagePrefix())) localStorage.removeItem(k);
+    });
+    sessionStorage.setItem("session_active", "true");
+  }
+
+  let currentQuestions = [];
+  let currentIndex = 0;
+  let solvedIndex = -1;
+  let userAnswers = {};
+  let currentSetKey = "";
+  let stats = { correct: 0, wrong: 0 };
+  let wrongQuestionsMode = false;
+
+  function storagePrefix() {
+    return "exam_" + CURRENT_SUBJECT.replace(/\s+/g, "_") + "_";
+  }
+
+  function setStateKey(index) {
+    return storagePrefix() + "state_set_" + index;
+  }
+
+  function wrongQuestionsKey() {
+    return storagePrefix() + "wrong_questions_pool";
+  }
+
+  function getWrongQuestionsPool() {
+    return JSON.parse(localStorage.getItem(wrongQuestionsKey()) || "[]");
+  }
+
+  function saveWrongQuestionsPool(pool) {
+    localStorage.setItem(wrongQuestionsKey(), JSON.stringify(pool));
+  }
+
+  function addWrongQuestionToPool(question) {
+    const pool = getWrongQuestionsPool();
+
+    const exists = pool.some(item =>
+      item.q === question.q &&
+      JSON.stringify(item.o) === JSON.stringify(question.o)
+    );
+
+    if (!exists) {
+      pool.push({
+        q: question.q,
+        o: [...question.o],
+        c: question.c,
+        e: question.e || ""
+      });
+      saveWrongQuestionsPool(pool);
+    }
+  }
+
+  function normalizeQuestion(q, originalIndex) {
+    return {
+      id: q.id || ("q_" + originalIndex + "_" + Math.random().toString(36).slice(2, 8)),
+      originalNo: originalIndex + 1,
+      q: q.q,
+      o: [...q.o],
+      c: q.c,
+      e: q.e || "",
+      isRetry: q.isRetry || false,
+      retryFrom: q.retryFrom || null,
+      retryCount: q.retryCount || 0,
+      answeredCorrectly: q.answeredCorrectly || false
+    };
+  }
+
+  function initMenu() {
+    const menuGrid = document.getElementById("menuGrid");
+    menuGrid.innerHTML = "";
+
+    const totalSets = Math.ceil(questions.length / QUESTIONS_PER_SET);
+
+    let setsPerButton = 1;
+    let buttonCount = totalSets;
+
+    if (buttonCount > 10) {
+      setsPerButton = 2;
+      buttonCount = Math.ceil(totalSets / setsPerButton);
+    }
+
+    buttonCount = Math.min(buttonCount, 10);
+
+    for (let i = 0; i < buttonCount; i++) {
+      const startSetNo = i * setsPerButton + 1;
+      const endSetNo = Math.min(startSetNo + setsPerButton - 1, totalSets);
+
+      const start = (startSetNo - 1) * QUESTIONS_PER_SET;
+      const end = Math.min(endSetNo * QUESTIONS_PER_SET, questions.length);
+
+      if (start >= questions.length) continue;
+
+      const key = setStateKey(i);
+
+      const saved = JSON.parse(localStorage.getItem(key) || "null");
+      const solved = saved ? Object.keys(saved.userAnswers || {}).length : 0;
+      const correct = saved?.stats?.correct || 0;
+      const wrong = saved?.stats?.wrong || 0;
+
+      const totalCurrent = saved?.currentQuestions?.length || (end - start);
+      const isCompleted = saved ? (solved >= totalCurrent && totalCurrent > 0) : false;
+
+      const label = startSetNo === endSetNo
+        ? `Deneme-${startSetNo} (${BASE_SUBJECT})`
+        : `Deneme-${startSetNo}-${endSetNo} (${BASE_SUBJECT})`;
+
+      const btn = document.createElement("button");
+      btn.className = `menu-btn ${isCompleted ? "locked" : ""}`;
+      btn.innerHTML = `
+        <strong>${label}</strong><br>
+        <small>${end - start} Soru | Çözülen ${solved} (Doğru ${correct} Yanlış ${wrong})</small>
+      `;
+
+      if (!isCompleted) {
+        btn.onclick = () => startSet(i, key, start, end);
+      }
+
+      menuGrid.appendChild(btn);
+    }
+
+    const wrongPool = getWrongQuestionsPool();
+
+    if (wrongPool.length > 0) {
+      const wrongBtn = document.createElement("button");
+      wrongBtn.className = "wrong-menu-btn";
+      wrongBtn.innerHTML = `
+        <strong>Yanlış Yapılan Sorular</strong><br>
+        <small>${wrongPool.length} Soru | Yeniden çöz</small>
+      `;
+      wrongBtn.onclick = openWrongQuestions;
+      menuGrid.appendChild(wrongBtn);
+    }
+  }
+
+  function openWrongQuestions() {
+    const pool = getWrongQuestionsPool();
+    if (!pool.length) return;
+
+    wrongQuestionsMode = true;
+    currentSetKey = storagePrefix() + "wrong_questions_state";
+
+    const saved = JSON.parse(localStorage.getItem(currentSetKey) || "null");
+
+    if (saved) {
+      currentQuestions = saved.currentQuestions;
+      currentIndex = saved.currentIndex;
+      solvedIndex = saved.solvedIndex;
+      userAnswers = saved.userAnswers || {};
+      stats = saved.stats || { correct: 0, wrong: 0 };
+    } else {
+      currentQuestions = pool.map((q, i) => ({
+        id: "wrong_" + i + "_" + Math.random().toString(36).slice(2, 8),
+        originalNo: i + 1,
+        q: q.q,
+        o: [...q.o],
+        c: q.c,
+        e: q.e || "",
+        isRetry: false,
+        retryFrom: null,
+        retryCount: 0,
+        answeredCorrectly: false
+      }));
+
+      currentIndex = 0;
+      solvedIndex = -1;
+      userAnswers = {};
+      stats = { correct: 0, wrong: 0 };
+      saveState();
+    }
+
+    document.getElementById("menuContainer").style.display = "none";
+    document.getElementById("quizContainer").style.display = "block";
+    document.getElementById("headerSubject").textContent = "Yanlış Yapılan Sorular";
+    loadQuestion();
+    window.scrollTo(0, 0);
+  }
+
+  function startSet(idx, key, start, end) {
+    wrongQuestionsMode = false;
+    currentSetKey = key;
+
+    const saved = JSON.parse(localStorage.getItem(key) || "null");
+
+    if (saved) {
+      currentQuestions = saved.currentQuestions;
+      currentIndex = saved.currentIndex;
+      solvedIndex = saved.solvedIndex;
+      userAnswers = saved.userAnswers || {};
+      stats = saved.stats || { correct: 0, wrong: 0 };
+    } else {
+      currentQuestions = questions.slice(start, end).map((q, i) => normalizeQuestion(q, start + i));
+      currentIndex = 0;
+      solvedIndex = -1;
+      userAnswers = {};
+      stats = { correct: 0, wrong: 0 };
+      saveState();
+    }
+
+    document.getElementById("menuContainer").style.display = "none";
+    document.getElementById("quizContainer").style.display = "block";
+    document.getElementById("headerSubject").textContent = BASE_SUBJECT;
+    loadQuestion();
+    window.scrollTo(0, 0);
+  }
+
+  function getQuestionTitle(q) {
+    const cleanQ = String(q.q || "").replace(/^\s*Soru-\d+\s*:\s*/i, "");
+    return `Soru-${q.originalNo} : ${cleanQ}`;
+  }
+
+  function loadQuestion() {
+    const q = currentQuestions[currentIndex];
+    const progress = ((currentIndex + 1) / currentQuestions.length) * 100;
+
+    document.getElementById("progressBar").style.width = progress + "%";
+    document.getElementById("footerLeft").textContent = `Kalan: ${Math.max(currentQuestions.length - (currentIndex + 1), 0)}`;
+    document.getElementById("footerRight").textContent = `${currentIndex + 1} / ${currentQuestions.length}`;
+    document.getElementById("questionText").textContent = getQuestionTitle(q);
+
+    const retryBadge = document.getElementById("retryBadge");
+    retryBadge.style.display = q.isRetry ? "block" : "none";
+
+    const optArea = document.getElementById("optionsArea");
+    const expArea = document.getElementById("explanationArea");
+    optArea.innerHTML = "";
+    expArea.style.display = "none";
+    expArea.innerHTML = "";
+
+    const letters = ["A", "B", "C", "D", "E"];
+
+    q.o.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerHTML = `<strong>${letters[idx]})</strong> ${opt}`;
+
+      if (currentIndex <= solvedIndex) {
+        btn.disabled = true;
+        const userChoice = userAnswers[currentIndex];
+
+        if (idx === userChoice) {
+          if (userChoice === q.c) {
+            btn.classList.add("correct");
+            btn.innerHTML += ` <span class="tick show">✔</span>`;
+          } else {
+            btn.classList.add("wrong");
+          }
+        }
+
+        if (wrongQuestionsMode) {
+          if (idx === q.c) {
+            btn.classList.add("correct");
+            btn.innerHTML += ` <span class="tick show">✔</span>`;
+          }
+          expArea.innerHTML = `<strong>Açıklama:</strong> ${String(q.e || "").replace(/^\s*Açıklama\s*:\s*/i, "")}`;
+          expArea.style.display = "block";
+        } else {
+          if (userChoice === q.c) {
+            expArea.innerHTML = `<strong>Açıklama:</strong> ${String(q.e || "").replace(/^\s*Açıklama\s*:\s*/i, "")}`;
+            expArea.style.display = "block";
+          } else if (q.isRetry) {
+            if (idx === q.c) {
+              btn.classList.add("correct");
+              btn.innerHTML += ` <span class="tick show">✔</span>`;
+            }
+            expArea.innerHTML = `<strong>Açıklama:</strong> ${String(q.e || "").replace(/^\s*Açıklama\s*:\s*/i, "")}`;
+            expArea.style.display = "block";
+          }
+        }
+      } else {
+        btn.onclick = () => selectOption(idx);
+      }
+
+      optArea.appendChild(btn);
+    });
+
+    document.getElementById("prevBtn").style.visibility = currentIndex > 0 ? "visible" : "hidden";
+    document.getElementById("nextBtn").style.visibility = currentIndex <= solvedIndex ? "visible" : "hidden";
+  }
+
+  function selectOption(idx) {
+    const q = currentQuestions[currentIndex];
+    const isCorrect = idx === q.c;
+
+    userAnswers[currentIndex] = idx;
+    solvedIndex = Math.max(solvedIndex, currentIndex);
+
+    if (isCorrect) {
+      stats.correct++;
+      q.answeredCorrectly = true;
+    } else {
+      stats.wrong++;
+
+      if (wrongQuestionsMode) {
+        // Yanlış Yapılan Sorular modunda soru yeniden eklenmez.
+      } else {
+        addWrongQuestionToPool(q);
+
+        if (!q.isRetry) {
+          const retryQuestion = {
+            ...q,
+            isRetry: true,
+            retryFrom: q.originalNo,
+            retryCount: 1
+          };
+
+          const insertIndex = Math.min(currentIndex + 5, currentQuestions.length);
+          currentQuestions.splice(insertIndex, 0, retryQuestion);
+        }
+      }
+    }
+
+    saveState();
+    loadQuestion();
+  }
+
+  function saveState() {
+    localStorage.setItem(currentSetKey, JSON.stringify({
+      currentQuestions,
+      currentIndex,
+      solvedIndex,
+      userAnswers,
+      stats
+    }));
+  }
+
+  function goForward() {
+    if (currentIndex < solvedIndex) {
+      currentIndex = solvedIndex + 1;
+    } else if (currentIndex < currentQuestions.length - 1) {
+      currentIndex++;
+    } else {
+      return showMenu();
+    }
+
+    saveState();
+    loadQuestion();
+    window.scrollTo(0, 0);
+  }
+
+  function goBack() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      saveState();
+      loadQuestion();
+      window.scrollTo(0, 0);
+    }
+  }
+
+  function showMenu() {
+    wrongQuestionsMode = false;
+    document.getElementById("headerSubject").textContent = BASE_SUBJECT;
+    document.getElementById("quizContainer").style.display = "none";
+    document.getElementById("menuContainer").style.display = "block";
+    initMenu();
+    window.scrollTo(0, 0);
+  }
+
+  function clearAllStatistics() {
+    if (confirm("Tüm veriler sıfırlansın mı?")) {
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith(storagePrefix())) localStorage.removeItem(k);
+      });
+      initMenu();
+    }
+  }
+
+  function resetCurrentSet() {
+    if (confirm("Bu deneme sıfırlansın mı?")) {
+      localStorage.removeItem(currentSetKey);
+      showMenu();
+    }
+  }
+
+  initMenu();
+</script>
+
+<script>
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function buildPatternKey(seq) {
+  if (seq.length < 4) return "";
+  return seq.slice(-4).join('-');
+}
+
+function shuffleAllQuestions() {
+  if (!confirm("Tüm sorular ve şıkları karıştırılsın mı?")) return;
+
+  const originalQuestions = questions.map(q => ({
+    q: q.q,
+    o: [...q.o],
+    c: q.c,
+    e: q.e
+  }));
+
+  let success = false;
+  let finalQuestions = null;
+
+  for (let attempt = 0; attempt < 250; attempt++) {
+    const qOrder = shuffleArray(originalQuestions);
+    const placed = [];
+    const answerSeq = [];
+
+    let failed = false;
+
+    for (const q of qOrder) {
+      const optionIndices = [...Array(q.o.length).keys()];
+      const candidates = [];
+
+      for (let inner = 0; inner < 40; inner++) {
+        const perm = shuffleArray(optionIndices);
+        const correctIndex = perm.indexOf(q.c);
+        const prev = answerSeq[answerSeq.length - 1];
+        const prev2 = answerSeq[answerSeq.length - 2];
+        const prev3 = answerSeq[answerSeq.length - 3];
+
+        if (correctIndex === prev) continue; // aynı şık arka arkaya gelmesin
+        if (prev !== undefined && prev2 !== undefined && prev3 !== undefined) {
+          if (prev3 === 0 && prev2 === 1 && prev === 2 && correctIndex === 3) continue;
+          if (prev3 === 3 && prev2 === 2 && prev === 1 && correctIndex === 0) continue;
+        }
+
+        const recent = answerSeq.slice(-3);
+        if (recent.length === 3) {
+          const uniq = new Set([...recent, correctIndex]);
+          if (uniq.size === 4 && (
+            (recent[0] === 0 && recent[1] === 1 && recent[2] === 2 && correctIndex === 3) ||
+            (recent[0] === 1 && recent[1] === 2 && recent[2] === 3 && correctIndex === 0) ||
+            (recent[0] === 3 && recent[1] === 2 && recent[2] === 1 && correctIndex === 0) ||
+            (recent[0] === 2 && recent[1] === 1 && recent[2] === 0 && correctIndex === 3)
+          )) continue;
+        }
+
+        const scoreCounts = [0, 1, 2, 3, 4].map(idx => answerSeq.filter(x => x === idx).length);
+        const score = scoreCounts[correctIndex] + (correctIndex === prev ? 100 : 0);
+
+        candidates.push({ perm, correctIndex, score });
+      }
+
+      if (!candidates.length) {
+        failed = true;
+        break;
+      }
+
+      candidates.sort((a, b) => a.score - b.score || Math.random() - 0.5);
+      const best = candidates[0];
+
+      placed.push({
+        q: q.q,
+        o: best.perm.map(i => q.o[i]),
+        c: best.correctIndex,
+        e: q.e
+      });
+      answerSeq.push(best.correctIndex);
+    }
+
+    if (!failed) {
+      finalQuestions = placed;
+      success = true;
+      break;
+    }
+  }
+
+  if (!success) {
+    alert("Karıştırma sırasında uygun dağılım kurulamadı. Tekrar deneyin.");
+    return;
+  }
+
+  questions.length = 0;
+  finalQuestions.forEach(q => questions.push(q));
+
+  if (typeof storagePrefix === "function") {
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith(storagePrefix())) localStorage.removeItem(k);
+    });
+  }
+
+  alert("Sorular profesyonel şekilde karıştırıldı!");
+  if (typeof initMenu === "function") initMenu();
+}
+
+function printExam() {
+  const examTitle = (document.getElementById('mainTitle')?.textContent || document.title || 'Sınav').trim();
+  let html = '<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Anayasa 150 Soru Deneme Sınavı</title><style>' +
+    '@page { size: A4; margin: 14mm; }' +
+    'body { font-family: Arial, sans-serif; color:#000; line-height:1.45; font-size:12pt; }' +
+    'h1 { text-align:center; font-size:18pt; margin:0 0 8mm; }' +
+    '.meta { margin-bottom:8mm; font-size:11pt; }' +
+    '.meta div { margin: 3mm 0; }' +
+    '.question { margin-bottom:6mm; page-break-inside: avoid; }' +
+    '.qtext { font-weight:bold; white-space: pre-line; }' +
+    '.options { margin-top:2mm; margin-left:6mm; }' +
+    '.options div { margin:1.4mm 0; white-space: pre-line; }' +
+    '.answer-key { page-break-before: always; margin-top: 8mm; }' +
+    '.answer-key h2 { text-align:center; font-size:16pt; margin:0 0 6mm; }' +
+    '.answer-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 3mm 8mm; font-size:11pt; }' +
+    '.answer-item { padding:2mm 0; border-bottom:1px solid #ccc; }' +
+    '</style></head><body>' +
+    '<h1>' + examTitle + '</h1>' +
+    '<div class="meta"><div>Adı Soyadı: _________________________________</div><div>Tarih: ____ / ____ / ________</div><div>İmza: _________________________________</div></div>';
+
+  questions.forEach((q, i) => {
+    const labels = ['A', 'B', 'C', 'D', 'E'];
+    html += '<div class="question"><div class="qtext">Soru-' + (i + 1) + ': ' + q.q + '</div><div class="options">';
+    q.o.forEach((opt, idx) => {
+      html += '<div>' + labels[idx] + ') ' + opt + '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  html += '<div class="answer-key"><h2>Cevap Anahtarı</h2><div class="answer-grid">';
+  questions.forEach((q, i) => {
+    const labels = ['A', 'B', 'C', 'D', 'E'];
+    const correct = labels[q.c] || '';
+    html += '<div class="answer-item">' + (i + 1) + '. Soru: ' + correct + '</div>';
+  });
+  html += '</div></div>
+<!-- ANAYASA_150_SORU_GOMULU: 150 gerçek soru eklendi; eski soru havuzu silindi. -->
+</body></html>';
+
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 250);
+}
+
+</script>
+
+
+<button onclick="printExam()" id="printExamBtn" style="position:fixed;top:10px;right:10px;z-index:10000;background:#111;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:bold;">🖨 Yazdır</button>
+
+<!-- ANAYASA_150_SORU_GOMULU: 150 gerçek soru eklendi; eski soru havuzu silindi. -->
+</body>
+</html>
